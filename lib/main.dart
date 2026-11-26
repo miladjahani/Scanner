@@ -54,7 +54,7 @@ class _EdgePulseAppState extends State<EdgePulseApp> {
             brightness: Brightness.dark,
             colorScheme: scheme,
             scaffoldBackgroundColor: const Color(0xFF070A0E),
-            cardTheme: CardTheme(
+            cardTheme: CardThemeData(
               color: const Color(0xFF10161F),
               elevation: 0,
               shape: RoundedRectangleBorder(
