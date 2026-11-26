@@ -49,10 +49,13 @@ jobs:
       - name: Build Go Native AAR with gomobile
         working-directory: go_core
         run: |
+          export PATH="$PATH:$(go env GOPATH)/bin"
           go install golang.org/x/mobile/cmd/gomobile@latest
           go install golang.org/x/mobile/cmd/gobind@latest
-          export PATH="$PATH:$(go env GOPATH)/bin"
           gomobile init
+          go mod edit -go=1.24
+          go get -tool golang.org/x/mobile/cmd/gobind@latest
+          go mod tidy
           mkdir -p ../android/app/libs
           gomobile bind -v -target=android/arm64,android/arm -androidapi 24 \
             -o ../android/app/libs/edgepulse_core.aar .
