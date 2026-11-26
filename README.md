@@ -64,9 +64,10 @@ edgepulse_scanner/
 
 | فایل | مناسب برای |
 | --- | --- |
-| `app-arm64-v8a-release.apk` | اکثر گوشی‌های جدید (۶۴ بیتی) — پیشنهادی |
-| `app-armeabi-v7a-release.apk` | گوشی‌های قدیمی‌تر ۳۲ بیتی |
-| `app-release.apk` | نسخه Universal (همه معماری‌ها، حجم بیشتر) |
+| `EdgePulse-Scanner-1.0.0-arm64-v8a.apk` | اکثر گوشی‌های جدید (۶۴ بیتی) — پیشنهادی |
+| `EdgePulse-Scanner-1.0.0-armeabi-v7a.apk` | گوشی‌های قدیمی‌تر ۳۲ بیتی |
+| `EdgePulse-Scanner-1.0.0-x86_64.apk` | امولاتور و دستگاه‌های x86_64 |
+| `EdgePulse-Scanner-1.0.0-universal.apk` | نسخه Universal (همه معماری‌ها، حجم بیشتر) |
 
 پس از دانلود، نصب از منابع نامشخص (Install unknown apps) را برای مرورگر یا فایل‌منیجر فعال کنید و APK را نصب کنید.
 
