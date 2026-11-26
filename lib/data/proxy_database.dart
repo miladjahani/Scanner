@@ -18,19 +18,7 @@ class CountryMeta {
   });
 }
 
-class DynamicProxyDomain {
-  final String domain;
-  final String country;
-  final String note;
-
-  const DynamicProxyDomain({
-    required this.domain,
-    required this.country,
-    required this.note,
-  });
-}
-
-/// Built-in verified ProxyIP dataset extracted from NiREvil/vless and FoolVPN-ID/Nautica.
+/// Built-in verified ProxyIP dataset, grouped by country.
 class ProxyDatabase {
   static const List<CountryMeta> countries = [
     CountryMeta(code: 'DE', nameFa: 'آلمان', nameEn: 'Germany', flag: '🇩🇪', regionGroup: 'EU', placementHint: 'aws:eu-central-1'),
@@ -72,19 +60,15 @@ class ProxyDatabase {
     'aws:ap-northeast-1',
   ];
 
-  static const List<DynamicProxyDomain> dynamicDomains = [
-    DynamicProxyDomain(domain: 'ProxyIP.DE.CMLiussss.net', country: 'DE', note: 'Germany Pool'),
-    DynamicProxyDomain(domain: 'ProxyIP.US.CMLiussss.net', country: 'US', note: 'USA Pool'),
-    DynamicProxyDomain(domain: 'ProxyIP.SG.CMLiussss.net', country: 'SG', note: 'Singapore Pool'),
-    DynamicProxyDomain(domain: 'ProxyIP.JP.CMLiussss.net', country: 'JP', note: 'Japan Pool'),
-    DynamicProxyDomain(domain: 'ProxyIP.KR.CMLiussss.net', country: 'KR', note: 'South Korea Pool'),
-    DynamicProxyDomain(domain: 'ProxyIP.HK.CMLiussss.net', country: 'HK', note: 'Hong Kong Pool'),
-    DynamicProxyDomain(domain: 'tr.diam4.ggff.net', country: 'TR', note: 'Istanbul Pool'),
-    DynamicProxyDomain(domain: 'di.nscl.ir', country: 'DE/US', note: 'Multi-Cloud Pool'),
-    DynamicProxyDomain(domain: 'bpb.yousef.isegaro.com', country: 'GLOBAL', note: 'BPB Panel Pool'),
-    DynamicProxyDomain(domain: 'proxyip.cmliussss.net', country: 'GLOBAL', note: 'Worldwide Pool'),
-    DynamicProxyDomain(domain: 'proxy.zjcloud.us.ci', country: 'GLOBAL', note: 'Cloudflare Proxy Pool'),
-    DynamicProxyDomain(domain: 'cdn.xn--b6gac.eu.org', country: 'GLOBAL', note: 'Public CDN Pool'),
+  /// Ready-to-scan IPv6 blocks. Users only ever see the ranges they can scan,
+  /// never provider domains.
+  static const List<String> ipv6Presets = [
+    '2606:4700:1000::/48',
+    '2606:4700:2000::/48',
+    '2606:4700:3000::/48',
+    '2a06:98c1:3100::/48',
+    '2803:f800:50::/48',
+    '2a02:cf40::/48',
   ];
 
   static CountryMeta metaFor(String code) {

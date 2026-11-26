@@ -10,7 +10,6 @@ import (
 	"net"
 	"net/http"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -185,7 +184,7 @@ func (s *Scanner) Run(ctx context.Context, targets []ProxyTarget, handler Result
 					passed++
 					if res.AvgLatencyMs > 0 && res.AvgLatencyMs < bestPing {
 						bestPing = res.AvgLatencyMs
-						bestIP = fmt.Sprintf("%s:%d", res.IP, res.Port)
+						bestIP = Endpoint(res.IP, res.Port)
 					}
 				} else {
 					failed++
@@ -308,7 +307,7 @@ func (s *Scanner) probeTarget(ctx context.Context, target ProxyTarget) ScanResul
 		TimestampUnix: time.Now().Unix(),
 	}
 
-	addr := net.JoinHostPort(target.IP, strconv.Itoa(target.Port))
+	addr := Endpoint(target.IP, target.Port)
 	timeout := time.Duration(s.cfg.TimeoutMs) * time.Millisecond
 
 	// Step 1: Multi-probe TCP connect for min/avg/max latency, jitter, and packet loss
@@ -468,7 +467,7 @@ func (s *Scanner) buildTLSConfig() *tls.Config {
 }
 
 func fetchTraceOverConn(conn net.Conn, host, path string) (map[string]string, error) {
-	reqStr := fmt.Sprintf("GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: EdgePulseScanner/1.0\r\nConnection: close\r\n\r\n", path, host)
+	reqStr := fmt.Sprintf("GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: miliscanner/1.0\r\nConnection: close\r\n\r\n", path, host)
 	if _, err := conn.Write([]byte(reqStr)); err != nil {
 		return nil, err
 	}
@@ -493,7 +492,7 @@ func fetchTraceOverConn(conn net.Conn, host, path string) (map[string]string, er
 }
 
 func (s *Scanner) measureDownloadMbps(ctx context.Context, ip string, port int) float64 {
-	addr := net.JoinHostPort(ip, strconv.Itoa(port))
+	addr := Endpoint(ip, port)
 	transport := &http.Transport{
 		TLSClientConfig: s.buildTLSConfig(),
 		DialContext: func(dctx context.Context, network, _ string) (net.Conn, error) {
@@ -511,7 +510,7 @@ func (s *Scanner) measureDownloadMbps(ctx context.Context, ip string, port int) 
 	if err != nil {
 		return 0
 	}
-	req.Header.Set("User-Agent", "EdgePulseScanner/1.0")
+	req.Header.Set("User-Agent", "miliscanner/1.0")
 
 	t0 := time.Now()
 	resp, err := client.Do(req)

@@ -1,4 +1,4 @@
-name: Build EdgePulse Android APK (Go + Flutter)
+name: Build miliscanner Android APK (Go + Flutter)
 
 on:
   push:
@@ -103,7 +103,7 @@ jobs:
       - name: Upload APK Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: EdgePulse-Scanner-APKs
+          name: miliscanner-APKs
           path: |
             build/app/outputs/flutter-apk/*.apk
           retention-days: 30

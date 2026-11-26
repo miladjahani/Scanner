@@ -61,7 +61,7 @@ func main() {
 	cfg.MaxLatencyMs = *maxLat
 
 	targets := edgepulse.ParseTargetsText(string(rawBytes), *country, cfg.DefaultPorts, cfg.MaxIPsPerCIDR)
-	fmt.Fprintf(os.Stderr, "Loaded %d unique targets. Starting EdgePulse Go Scanner...\n", len(targets))
+	fmt.Fprintf(os.Stderr, "Loaded %d unique targets. Starting miliscanner Go engine...\n", len(targets))
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -90,7 +90,7 @@ func writeOutput(path string, results []edgepulse.ScanResult) error {
 		var lines []string
 		for _, r := range results {
 			if r.Passed {
-				lines = append(lines, fmt.Sprintf("%s:%d", r.IP, r.Port))
+				lines = append(lines, edgepulse.Endpoint(r.IP, r.Port))
 			}
 		}
 		return os.WriteFile(path, []byte(strings.Join(lines, "\n")+"\n"), 0644)

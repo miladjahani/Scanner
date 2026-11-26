@@ -4,11 +4,12 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
-        android:label="EdgePulse Scanner"
+        android:label="miliscanner"
         android:name="${applicationName}"
         android:usesCleartextTraffic="true"
         android:supportsRtl="true"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@drawable/ic_miliscanner"
+        android:roundIcon="@drawable/ic_miliscanner">
         <activity
             android:name=".MainActivity"
             android:exported="true"

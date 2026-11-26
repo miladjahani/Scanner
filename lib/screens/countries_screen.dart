@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../data/proxy_database.dart';
 import '../state/scanner_controller.dart';
 
@@ -204,7 +203,9 @@ class _CountriesScreenState extends State<CountriesScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isFa ? 'لیست دلخواه (IP:Port، CSV یا رنج CIDR)' : 'Custom IPs / CSV / CIDR Ranges',
+                  isFa
+                      ? 'لیست دلخواه (IPv4/IPv6، CSV یا رنج CIDR)'
+                      : 'Custom IPs (IPv4/IPv6), CSV or CIDR ranges',
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 8),
@@ -213,7 +214,8 @@ class _CountriesScreenState extends State<CountriesScreen> {
                   maxLines: 5,
                   style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
                   decoration: InputDecoration(
-                    hintText: '18.184.55.249:443\n162.158.82.0/24\n116.203.58.165,443,DE,Hetzner',
+                    hintText:
+                        '18.184.55.249:443\n162.158.82.0/24\n[2606:4700:1000::1]:443\n2606:4700:3000::/48',
                   ),
                   onChanged: (v) => c.setCustomTargetsText(v),
                 ),
@@ -274,26 +276,58 @@ class _CountriesScreenState extends State<CountriesScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        // Dynamic ProxyIP Domains
-        Text(
-          isFa ? 'دامین‌های پروکسی آی‌پی پویا (کپی سریع)' : 'Dynamic ProxyIP Domains (Tap to Copy)',
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-        ),
-        const SizedBox(height: 8),
-        ...ProxyDatabase.dynamicDomains.map(
-          (d) => Card(
-            margin: const EdgeInsets.only(bottom: 6),
-            child: ListTile(
-              dense: true,
-              title: Text(d.domain, style: const TextStyle(fontFamily: 'monospace')),
-              subtitle: Text('${d.country} • ${d.note}', style: const TextStyle(fontSize: 11)),
-              trailing: const Icon(Icons.copy_rounded, size: 18, color: Color(0xFF00E676)),
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: d.domain));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(isFa ? 'کپی شد: ${d.domain}' : 'Copied: ${d.domain}')),
-                );
-              },
+        // IPv6 scanner presets (no provider domains are shown to the user)
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.lan_rounded, size: 18, color: Color(0xFFB388FF)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        isFa ? 'اسکن IPv6' : 'IPv6 scanning',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  isFa
+                      ? 'رنج‌های IPv6 کلودفلر را با یک ضربه به لیست دلخواه اضافه کنید. موتور Go و موتور Dart هر دو IPv6 و CIDR نسخه ۶ را پشتیبانی می‌کنند.'
+                      : 'Add Cloudflare IPv6 ranges with one tap. Both the Go core and the Dart fallback parse IPv6 addresses and CIDR blocks.',
+                  style: const TextStyle(fontSize: 11, color: Colors.white60),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: ProxyDatabase.ipv6Presets.map((range) {
+                    return ActionChip(
+                      avatar: const Icon(Icons.add_rounded, size: 14),
+                      label: Text(range, style: const TextStyle(fontSize: 11)),
+                      onPressed: () async {
+                        final current = _customCtrl.text.trim();
+                        final merged = current.isEmpty ? range : '$current\n$range';
+                        _customCtrl.text = merged;
+                        await c.setCustomTargetsText(merged);
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              isFa ? 'رنج IPv6 اضافه شد: $range' : 'Added IPv6 range: $range',
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }).toList(),
+                ),
+              ],
             ),
           ),
         ),

@@ -6,28 +6,33 @@ import 'package:share_plus/share_plus.dart';
 import '../models/scan_models.dart';
 
 class ExportService {
+  /// Renders passing results in the requested container plus output toggles.
+  ///
+  /// [ExportFormat.list] honours [ExportOptions.separator] (new lines or commas),
+  /// [ExportOptions.includePort], [ExportOptions.includeCountryTag] (`#DE`
+  /// group headers) and [ExportOptions.onlyIpv6].
   static String formatResults(
     List<ScanResult> results,
     ExportFormat format, {
     required ScanConfig config,
+    ExportOptions options = const ExportOptions(),
   }) {
-    final passing = results.where((r) => r.passed).toList();
-    switch (format) {
-      case ExportFormat.txt:
-        return passing.map((r) => '${r.ip}:${r.port}').join('\n');
+    final passing = _select(results, options);
 
-      case ExportFormat.bpb:
-        return passing.map((r) => '${r.ip}:${r.port}').join(',');
+    switch (format) {
+      case ExportFormat.list:
+        return _formatList(passing, options);
 
       case ExportFormat.csv:
         final buf = StringBuffer();
         buf.writeln(
-          'IP,Port,Country,Provider,AvgLatencyMs,JitterMs,LossPct,TLSHandshakeMs,Colo,DownloadMbps,Score',
+          'Host,Port,Country,Provider,AvgLatencyMs,JitterMs,LossPct,TLSHandshakeMs,Colo,DownloadMbps,Score',
         );
         for (final r in passing) {
           final safeProv = r.provider.replaceAll(',', ' ');
+          final host = r.isIpv6 ? formatHost(r.ip) : r.ip;
           buf.writeln(
-            '${r.ip},${r.port},${r.country},$safeProv,${r.avgLatencyMs},${r.jitterMs},${r.packetLossPct},${r.tlsHandshakeMs},${r.colo},${r.downloadMbps},${r.score}',
+            '$host,${r.port},${r.country},$safeProv,${r.avgLatencyMs},${r.jitterMs},${r.packetLossPct},${r.tlsHandshakeMs},${r.colo},${r.downloadMbps},${r.score}',
           );
         }
         return buf.toString();
@@ -39,13 +44,47 @@ class ExportService {
       case ExportFormat.vless:
         final encodedPath = Uri.encodeComponent(config.vlessPath);
         return passing.map((r) {
-          final tag = Uri.encodeComponent('${r.country}-${r.colo.isEmpty ? "CF" : r.colo}-${r.avgLatencyMs}ms');
-          return 'vless://${config.vlessUuid}@${r.ip}:${r.port}'
+          final tag = Uri.encodeComponent(
+            '${r.country}-${r.colo.isEmpty ? 'CF' : r.colo}-${r.avgLatencyMs}ms',
+          );
+          return 'vless://${config.vlessUuid}@${r.endpoint}'
               '?encryption=none&security=tls&sni=${config.vlessHost}'
               '&fp=chrome&type=ws&host=${config.vlessHost}&path=$encodedPath#$tag';
         }).join('\n');
     }
   }
+
+  static List<ScanResult> _select(List<ScanResult> results, ExportOptions options) {
+    return results
+        .where((r) => r.passed)
+        .where((r) => !options.onlyIpv6 || r.isIpv6)
+        .toList();
+  }
+
+  static String _formatList(List<ScanResult> passing, ExportOptions options) {
+    String entry(ScanResult r) =>
+        options.includePort ? r.endpoint : formatHost(r.ip);
+
+    if (!options.includeCountryTag) {
+      return passing.map(entry).join(_separator(options));
+    }
+
+    final grouped = <String, List<ScanResult>>{};
+    for (final r in passing) {
+      grouped.putIfAbsent(r.country.isEmpty ? 'XX' : r.country, () => []).add(r);
+    }
+    final codes = grouped.keys.toList()..sort();
+
+    final blocks = <String>[];
+    for (final code in codes) {
+      final body = grouped[code]!.map(entry).join(_separator(options));
+      blocks.add('#$code\n$body');
+    }
+    return blocks.join('\n\n');
+  }
+
+  static String _separator(ExportOptions options) =>
+      options.separator == ExportSeparator.comma ? ', ' : '\n';
 
   static String extensionFor(ExportFormat format) {
     switch (format) {
@@ -53,27 +92,38 @@ class ExportService {
         return 'csv';
       case ExportFormat.json:
         return 'json';
-      case ExportFormat.txt:
-      case ExportFormat.bpb:
+      case ExportFormat.list:
       case ExportFormat.vless:
         return 'txt';
     }
+  }
+
+  /// Builds a file name that describes the active output options.
+  static String fileNameFor(ExportFormat format, ExportOptions options) {
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    final tag = [
+      format.name,
+      options.separator == ExportSeparator.comma ? 'comma' : 'lines',
+      options.includePort ? 'port' : 'noport',
+      if (options.includeCountryTag) 'tags',
+    ].join('_');
+    return 'miliscanner_${tag}_$ts.${extensionFor(format)}';
   }
 
   static Future<void> shareExport(
     List<ScanResult> results,
     ExportFormat format, {
     required ScanConfig config,
+    ExportOptions options = const ExportOptions(),
   }) async {
-    final content = formatResults(results, format, config: config);
+    final content =
+        formatResults(results, format, config: config, options: options);
     final dir = await getTemporaryDirectory();
-    final ext = extensionFor(format);
-    final ts = DateTime.now().millisecondsSinceEpoch;
-    final file = File('${dir.path}/edgepulse_proxies_${format.name}_$ts.$ext');
+    final file = File('${dir.path}/${fileNameFor(format, options)}');
     await file.writeAsString(content);
     await Share.shareXFiles(
       [XFile(file.path)],
-      subject: 'EdgePulse ProxyIP Export (${format.name.toUpperCase()})',
+      subject: 'miliscanner export (${format.name.toUpperCase()})',
     );
   }
 }

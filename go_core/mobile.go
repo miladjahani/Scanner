@@ -31,7 +31,7 @@ func NewEngine() *Engine {
 
 // Version returns the native Go core version string.
 func (e *Engine) Version() string {
-	return "EdgePulse-GoCore/1.0.0"
+	return "miliscanner-core/1.1.0"
 }
 
 // StartScan parses targetsJSON and configJSON and runs the scan asynchronously.

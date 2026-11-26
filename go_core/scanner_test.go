@@ -25,6 +25,43 @@ func TestParseTargetsText(t *testing.T) {
 	}
 }
 
+func TestParseTargetsIPv6(t *testing.T) {
+	input := `
+[2606:4700:1000::6812:1a]:443
+2606:4700:1000::1 8443 DE
+2606:4700:1000::/126
+`
+	targets := ParseTargetsText(input, "US", []int{443}, 8)
+	if len(targets) != 6 {
+		t.Fatalf("expected 6 unique IPv6 targets, got %d: %+v", len(targets), targets)
+	}
+	if targets[0].IP != "2606:4700:1000::6812:1a" || targets[0].Port != 443 {
+		t.Fatalf("unexpected bracketed IPv6 parse: %+v", targets[0])
+	}
+	if targets[1].Country != "DE" || targets[1].Port != 8443 {
+		t.Fatalf("unexpected IPv6 space-separated parse: %+v", targets[1])
+	}
+}
+
+func TestEndpointBracketsIPv6(t *testing.T) {
+	if got := Endpoint("2606:4700:1000::1", 443); got != "[2606:4700:1000::1]:443" {
+		t.Fatalf("unexpected IPv6 endpoint: %s", got)
+	}
+	if got := Endpoint("1.1.1.1", 443); got != "1.1.1.1:443" {
+		t.Fatalf("unexpected IPv4 endpoint: %s", got)
+	}
+}
+
+func TestExpandCIDRIPv6(t *testing.T) {
+	ips := ExpandCIDR("2606:4700:1000::/126", 8)
+	if len(ips) != 4 {
+		t.Fatalf("expected 4 distinct IPv6 hosts for /126, got %d: %v", len(ips), ips)
+	}
+	if ips[0] == ips[3] {
+		t.Fatalf("expected distinct IPv6 hosts, got %v", ips)
+	}
+}
+
 func TestExpandCIDR(t *testing.T) {
 	ips := ExpandCIDR("192.0.2.0/29", 10)
 	if len(ips) != 6 {

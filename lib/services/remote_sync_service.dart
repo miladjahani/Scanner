@@ -3,16 +3,16 @@ import '../models/scan_models.dart';
 import 'go_engine_bridge.dart';
 
 class RemoteSyncService {
-  static const String nauticaListUrl =
+  static const String globalListUrl =
       'https://raw.githubusercontent.com/FoolVPN-ID/Nautica/main/proxyList.txt';
 
-  static String nirevilCountryUrl(String countryCode) =>
+  static String countryListUrl(String countryCode) =>
       'https://raw.githubusercontent.com/NiREvil/vless/main/sub/country_proxies/${countryCode.toUpperCase()}.txt';
 
-  /// Fetches live country-specific ProxyIPs from NiREvil/vless or Nautica.
+  /// Fetches the latest country-specific ProxyIP list.
   Future<List<ProxyTarget>> fetchForCountry(String countryCode) async {
     final cc = countryCode.toUpperCase();
-    final uri = Uri.parse(nirevilCountryUrl(cc));
+    final uri = Uri.parse(countryListUrl(cc));
     final resp = await http.get(uri).timeout(const Duration(seconds: 12));
     if (resp.statusCode != 200) {
       throw Exception('HTTP ${resp.statusCode} while fetching $cc list');
@@ -24,13 +24,13 @@ class RemoteSyncService {
     );
   }
 
-  /// Fetches full multi-country ProxyIP list from FoolVPN-ID/Nautica.
-  Future<List<ProxyTarget>> fetchGlobalNautica() async {
+  /// Fetches the full multi-country ProxyIP list.
+  Future<List<ProxyTarget>> fetchGlobalList() async {
     final resp = await http
-        .get(Uri.parse(nauticaListUrl))
+        .get(Uri.parse(globalListUrl))
         .timeout(const Duration(seconds: 15));
     if (resp.statusCode != 200) {
-      throw Exception('HTTP ${resp.statusCode} while fetching Nautica list');
+      throw Exception('HTTP ${resp.statusCode} while fetching the global list');
     }
     return GoEngineBridge.parseRawTargets(
       resp.body,

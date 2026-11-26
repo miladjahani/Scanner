@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import '../data/proxy_database.dart';
 import '../models/scan_models.dart';
@@ -20,6 +22,7 @@ class ScannerController extends ChangeNotifier {
 
   bool isScanning = false;
   bool isSyncing = false;
+  bool isDemo = false;
   String? lastError;
   String activeEngineLabel = '';
 
@@ -176,8 +179,93 @@ class ScannerController extends ChangeNotifier {
     }
   }
 
+  /// Fills the UI with 18 bilingual demo results so the bento layout can be
+  /// explored (and shown off) without running a real scan.
+  Future<void> loadDemoResults() async {
+    if (isScanning) return;
+    _resultsMap.clear();
+    isDemo = true;
+    lastError = null;
+    final samples = _demoSamples();
+    for (final r in samples) {
+      _resultsMap[r.endpoint] = r;
+    }
+    final passed = samples.where((r) => r.passed).length;
+    progress = ScanProgress(
+      total: samples.length,
+      completed: samples.length,
+      passed: passed,
+      failed: samples.length - passed,
+      bestPingMs: samples
+          .where((r) => r.passed)
+          .fold<int>(0, (acc, r) => acc == 0 ? r.avgLatencyMs : min(acc, r.avgLatencyMs)),
+      bestIp: samples.first.endpoint,
+      avgSpeedMbps: 42.6,
+      elapsedMs: 8420,
+      phase: 'demo',
+    );
+    notifyListeners();
+  }
+
+  void clearResults() {
+    _resultsMap.clear();
+    isDemo = false;
+    progress = const ScanProgress();
+    notifyListeners();
+  }
+
+  List<ScanResult> _demoSamples() {
+    const seeds = <Map<String, dynamic>>[
+      {'ip': '18.184.55.249', 'cc': 'DE', 'colo': 'FRA', 'ping': 38, 'score': 96.4, 'speed': 71.2},
+      {'ip': '2606:4700:1000::6812:1a', 'cc': 'DE', 'colo': 'FRA', 'ping': 44, 'score': 94.1, 'speed': 128.6},
+      {'ip': '3.68.62.122', 'cc': 'DE', 'colo': 'FRA', 'ping': 41, 'score': 95.2, 'speed': 88.4},
+      {'ip': '146.190.236.144', 'cc': 'NL', 'colo': 'AMS', 'ping': 52, 'score': 92.8, 'speed': 64.9},
+      {'ip': '2a06:98c1:3100::1f4', 'cc': 'NL', 'colo': 'AMS', 'ping': 57, 'score': 91.3, 'speed': 96.1},
+      {'ip': '164.92.219.230', 'cc': 'NL', 'colo': 'AMS', 'ping': 61, 'score': 89.9, 'speed': 55.7},
+      {'ip': '185.234.66.91', 'cc': 'TR', 'colo': 'IST', 'ping': 74, 'score': 87.5, 'speed': 38.2},
+      {'ip': '94.131.123.74', 'cc': 'TR', 'colo': 'IST', 'ping': 79, 'score': 86.1, 'speed': 33.8},
+      {'ip': '2803:f800:50::6ca2:c0c9', 'cc': 'TR', 'colo': 'IST', 'ping': 82, 'score': 85.4, 'speed': 41.5},
+      {'ip': '146.70.37.253', 'cc': 'AE', 'colo': 'DXB', 'ping': 88, 'score': 84.8, 'speed': 36.4},
+      {'ip': '45.86.228.104', 'cc': 'AE', 'colo': 'DXB', 'ping': 91, 'score': 83.2, 'speed': 30.1},
+      {'ip': '2a02:cf40:1::42', 'cc': 'AE', 'colo': 'DXB', 'ping': 96, 'score': 82.0, 'speed': 44.7},
+      {'ip': '18.216.55.100', 'cc': 'US', 'colo': 'IAD', 'ping': 112, 'score': 80.6, 'speed': 52.3},
+      {'ip': '2606:4700:2000::6810:3764', 'cc': 'US', 'colo': 'IAD', 'ping': 118, 'score': 79.4, 'speed': 61.8},
+      {'ip': '147.75.230.33', 'cc': 'US', 'colo': 'SJC', 'ping': 121, 'score': 78.1, 'speed': 47.6},
+      {'ip': '13.212.102.10', 'cc': 'SG', 'colo': 'SIN', 'ping': 132, 'score': 76.9, 'speed': 58.2},
+      {'ip': '2606:4700:3000::6812:3f0a', 'cc': 'SG', 'colo': 'SIN', 'ping': 138, 'score': 75.2, 'speed': 62.4},
+      {'ip': '152.42.163.208', 'cc': 'SG', 'colo': 'SIN', 'ping': 146, 'score': 73.8, 'speed': 39.9},
+    ];
+
+    return seeds.map((s) {
+      final ping = s['ping'] as int;
+      return ScanResult(
+        ip: s['ip'] as String,
+        port: 443,
+        country: s['cc'] as String,
+        provider: (s['ip'] as String).contains(':') ? 'IPv6 Pool' : 'Cloud Pool',
+        passed: true,
+        minLatencyMs: ping - 6,
+        avgLatencyMs: ping,
+        maxLatencyMs: ping + 11,
+        jitterMs: 4 + ping % 9,
+        packetLossPct: 0,
+        tlsHandshakeMs: ping + 18,
+        tlsVersion: 'TLS 1.3',
+        negotiatedAlpn: 'h2',
+        traceOk: true,
+        colo: s['colo'] as String,
+        traceLoc: s['cc'] as String,
+        traceIp: s['ip'] as String,
+        downloadMbps: s['speed'] as double,
+        score: s['score'] as double,
+        timestampUnix: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      );
+    }).toList();
+  }
+
   Future<void> startScan() async {
     if (isScanning) return;
+    isDemo = false;
     final targets = buildActiveTargets();
     if (targets.isEmpty) {
       lastError = isFa

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import '../models/scan_models.dart';
@@ -288,7 +289,7 @@ class GoEngineBridge {
           secureSock.write(
             'GET ${cfg.tracePath} HTTP/1.1\r\n'
             'Host: ${cfg.traceHost}\r\n'
-            'User-Agent: EdgePulseScanner/1.0\r\n'
+            'User-Agent: miliscanner/1.0\r\n'
             'Connection: close\r\n\r\n',
           );
           await secureSock.flush();
@@ -423,6 +424,25 @@ class GoEngineBridge {
         continue;
       }
 
+      // A bare address (IPv4 or IPv6) has no port and uses the defaults.
+      final bare = InternetAddress.tryParse(line.replaceAll('[', '').replaceAll(']', ''));
+      if (bare != null) {
+        for (final p in ports) {
+          add(bare.address, p, defaultCountry, 'Custom');
+        }
+        continue;
+      }
+
+      // Bracketed IPv6 with port: [2606:4700::1]:443
+      final bracketed = RegExp(r'^\[([^\]]+)\]:(\d+)$').firstMatch(line);
+      if (bracketed != null) {
+        final port = int.tryParse(bracketed.group(2)!);
+        if (port != null) {
+          add(bracketed.group(1)!, port, defaultCountry, 'Custom');
+          continue;
+        }
+      }
+
       if (line.contains(':')) {
         final idx = line.lastIndexOf(':');
         final host = line.substring(0, idx).replaceAll('[', '').replaceAll(']', '');
@@ -455,9 +475,28 @@ class GoEngineBridge {
   static List<String> _expandCidr(String cidr, int maxCount) {
     final parts = cidr.split('/');
     if (parts.length != 2) return const [];
-    final addr = InternetAddress.tryParse(parts[0].trim());
+    final addr = InternetAddress.tryParse(parts[0].trim().replaceAll('[', '').replaceAll(']', ''));
     final prefix = int.tryParse(parts[1].trim());
-    if (addr == null || addr.type != InternetAddressType.IPv4 || prefix == null || prefix < 16 || prefix > 32) {
+    if (addr == null || prefix == null) return const [];
+
+    // IPv6 blocks are sampled from the network address; they are far too
+    // large to enumerate.
+    if (addr.type == InternetAddressType.IPv6) {
+      if (prefix < 0 || prefix > 128) return const [];
+      final raw = List<int>.from(addr.rawAddress.take(16));
+      final ips = <String>[];
+      for (var i = 0; i < maxCount; i++) {
+        if (ips.length >= maxCount) break;
+        ips.add(InternetAddress.fromRawAddress(Uint8List.fromList(raw)).address);
+        for (var j = raw.length - 1; j >= 0; j--) {
+          raw[j] = (raw[j] + 1) & 0xFF;
+          if (raw[j] != 0) break;
+        }
+      }
+      return ips;
+    }
+
+    if (prefix < 16 || prefix > 32) {
       return const [];
     }
     final b = addr.rawAddress;

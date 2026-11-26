@@ -1,5 +1,16 @@
 import 'dart:convert';
 
+/// Renders a host for output: IPv6 literals are wrapped in brackets.
+String formatHost(String ip) {
+  final bare = ip.replaceAll('[', '').replaceAll(']', '');
+  return bare.contains(':') ? '[$bare]' : bare;
+}
+
+/// Renders `host:port`, bracketing IPv6 addresses correctly.
+String formatEndpoint(String ip, int port) => '${formatHost(ip)}:$port';
+
+bool isIpv6Host(String ip) => ip.replaceAll('[', '').replaceAll(']', '').contains(':');
+
 class ProxyTarget {
   final String ip;
   final int port;
@@ -13,7 +24,9 @@ class ProxyTarget {
     this.provider = '',
   });
 
-  String get endpoint => '$ip:$port';
+  String get endpoint => formatEndpoint(ip, port);
+
+  bool get isIpv6 => isIpv6Host(ip);
 
   Map<String, dynamic> toJson() => {
         'ip': ip,
@@ -304,7 +317,9 @@ class ScanResult {
     this.timestampUnix = 0,
   });
 
-  String get endpoint => '$ip:$port';
+  String get endpoint => formatEndpoint(ip, port);
+
+  bool get isIpv6 => isIpv6Host(ip);
 
   Map<String, dynamic> toJson() => {
         'ip': ip,
@@ -462,4 +477,36 @@ class ScanSession {
 
 enum ResultSortBy { score, latency, jitter, speed, country }
 
-enum ExportFormat { txt, csv, json, bpb, vless }
+/// Output container: plain list, CSV table, JSON document or VLESS links.
+enum ExportFormat { list, csv, json, vless }
+
+/// Separator used between exported IPs when [ExportFormat.list] is selected.
+enum ExportSeparator { newLine, comma }
+
+/// Every toggle the export sheet exposes: separator, port and country tags.
+class ExportOptions {
+  final ExportSeparator separator;
+  final bool includePort;
+  final bool includeCountryTag;
+  final bool onlyIpv6;
+
+  const ExportOptions({
+    this.separator = ExportSeparator.newLine,
+    this.includePort = true,
+    this.includeCountryTag = false,
+    this.onlyIpv6 = false,
+  });
+
+  ExportOptions copyWith({
+    ExportSeparator? separator,
+    bool? includePort,
+    bool? includeCountryTag,
+    bool? onlyIpv6,
+  }) =>
+      ExportOptions(
+        separator: separator ?? this.separator,
+        includePort: includePort ?? this.includePort,
+        includeCountryTag: includeCountryTag ?? this.includeCountryTag,
+        onlyIpv6: onlyIpv6 ?? this.onlyIpv6,
+      );
+}

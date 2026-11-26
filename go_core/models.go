@@ -127,11 +127,18 @@ type ScanProgress struct {
 	IsPaused    bool    `json:"is_paused"`
 }
 
+// Endpoint renders an IPv4 or IPv6 host:port pair, bracketing IPv6 literals.
+func Endpoint(ip string, port int) string {
+	return net.JoinHostPort(strings.Trim(ip, "[]"), strconv.Itoa(port))
+}
+
 // ParseTargetsText parses flexible input lines:
 //   - "1.2.3.4:443"
 //   - "1.2.3.4 443"
 //   - "1.2.3.4,443,DE,Hetzner"
 //   - "162.158.82.0/24"
+//   - "[2606:4700:1000::1]:443"
+//   - "2606:4700:1000::/48"
 func ParseTargetsText(raw string, defaultCountry string, defaultPorts []int, maxPerCIDR int) []ProxyTarget {
 	if len(defaultPorts) == 0 {
 		defaultPorts = []int{443}
@@ -143,10 +150,13 @@ func ParseTargetsText(raw string, defaultCountry string, defaultPorts []int, max
 	var out []ProxyTarget
 
 	addTarget := func(ip string, port int, cc, prov string) {
-		if net.ParseIP(ip) == nil || port <= 0 || port > 65535 {
+		ip = strings.Trim(strings.TrimSpace(ip), "[]")
+		parsed := net.ParseIP(ip)
+		if parsed == nil || port <= 0 || port > 65535 {
 			return
 		}
-		key := fmt.Sprintf("%s:%d", ip, port)
+		ip = parsed.String()
+		key := Endpoint(ip, port)
 		if _, ok := seen[key]; ok {
 			return
 		}
@@ -233,12 +243,50 @@ func ParseTargetsText(raw string, defaultCountry string, defaultPorts []int, max
 	return out
 }
 
-// ExpandCIDR expands an IPv4 CIDR block into up to maxCount usable host IPs.
+// ExpandCIDR expands an IPv4 or IPv6 CIDR block into up to maxCount usable host IPs.
 func ExpandCIDR(cidr string, maxCount int) []string {
 	_, ipNet, err := net.ParseCIDR(strings.TrimSpace(cidr))
 	if err != nil {
 		return nil
 	}
+	if ipv4 := ipNet.IP.To4(); ipv4 == nil {
+		return expandCIDR6(ipNet, maxCount)
+	} else {
+		return expandCIDR4(ipNet, maxCount)
+	}
+}
+
+// expandCIDR6 samples an IPv6 block, which is far too large to enumerate.
+func expandCIDR6(ipNet *net.IPNet, maxCount int) []string {
+	base := ipNet.IP.To16()
+	if base == nil {
+		return nil
+	}
+	if maxCount <= 0 {
+		maxCount = 256
+	}
+	current := make(net.IP, net.IPv6len)
+	copy(current, base)
+	var ips []string
+	for i := 0; i < maxCount; i++ {
+		next := make(net.IP, net.IPv6len)
+		copy(next, current)
+		ips = append(ips, next.String())
+		// Advance by one address.
+		for j := net.IPv6len - 1; j >= 0; j-- {
+			current[j]++
+			if current[j] != 0 {
+				break
+			}
+		}
+		if !ipNet.Contains(current) {
+			break
+		}
+	}
+	return ips
+}
+
+func expandCIDR4(ipNet *net.IPNet, maxCount int) []string {
 	ipv4 := ipNet.IP.To4()
 	if ipv4 == nil {
 		return nil
@@ -268,7 +316,7 @@ func ExpandCIDR(cidr string, maxCount int) []string {
 		}
 	}
 
-	for offset := firstOffset; offset <= lastOffset && len(ips) < maxCount; offset += step {
+	for offset := firstOffset; offset <= lastOffset && (maxCount <= 0 || len(ips) < maxCount); offset += step {
 		ipUint := start + uint32(offset)
 		ip := make(net.IP, 4)
 		binary.BigEndian.PutUint32(ip, ipUint)

@@ -1,85 +1,97 @@
-# EdgePulse Scanner — اپلیکیشن اندرویدی اسکنر پروکسی آی‌پی کلودفلر (Go + Flutter)
+# miliscanner — اسکنر پروکسی آی‌پی کلودفلر (Go + Flutter)
 
 ![Platform](https://img.shields.io/badge/Platform-Android%20(API%2024%2B)-00E676?style=flat-square)
+![IPv6](https://img.shields.io/badge/IPv4%20%2B%20IPv6-Ready-B388FF?style=flat-square)
 ![Core](https://img.shields.io/badge/Core-Go%201.23%20(gomobile)-00ADD8?style=flat-square)
-![UI](https://img.shields.io/badge/UI-Flutter%203.24%20%2F%20Dart-02569B?style=flat-square)
-![CI](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions%20APK-2088FF?style=flat-square)
+![UI](https://img.shields.io/badge/UI-Flutter%20Bento-02569B?style=flat-square)
+![Support](https://img.shields.io/badge/Support-%40miliconfig-29B6F6?style=flat-square)
 
-**EdgePulse Scanner** یک اپلیکیشن اندرویدی حرفه‌ای با معماری دوگانه **Go (موتور پرسرعت همزمان از طریق `gomobile`)** و **Flutter/Dart (رابط کاربری AMOLED دو‌زبانه فارسی/انگلیسی)** برای اسکن، بنچمارک و استخراج بهترین پروکسی آی‌پی‌های کلودفلر (ProxyIP) به تفکیک کشور و ریجن‌های Placement است.
+**miliscanner** یک اپلیکیشن اندرویدی با معماری دوگانه است: موتور پرسرعت همزمان **Go** (از طریق `gomobile`) و رابط کاربری **Flutter/Dart** با طراحی تیره بنتو (Bento) و دو زبان فارسی/انگلیسی.
+این اپ آی‌پی‌های پروکسی کلودفلر را اسکن، بنچمارک و بهینه می‌کند؛ روی **IPv4 و IPv6**.
+
+کانال پشتیبانی: [@miliconfig](https://t.me/miliconfig)
 
 ---
 
-## امکانات کلیدی (Features)
+## امکانات
 
-- **موتور اسکن بومی Go (`go_core/`):**
-  - استخر همزمان تا ۵۰۰ گوروتین با قابلیت **توقف موقت (Pause/Resume)** و لغو لحظه‌ای.
-  - تست چندمرحله‌ای TCP برای محاسبه دقیق **Min / Avg / Max Ping، جیتر (Jitter) و درصد پکت‌لاس (Packet Loss)**.
-  - بررسی **TLS Handshake** با قابلیت تنظیم SNI دلخواه، ALPN (`h2,http/1.1`)، نسخه TLS (1.2/1.3) و رد کردن خطای گواهی روی IP خام.
-  - تایید واقعی بودن مسیر کلودفلر از طریق **`/cdn-cgi/trace`** و استخراج خودکار **کد دیتاسنتر (Colo)** و موقعیت.
-  - **تست سرعت دانلود (Speed Test)** روی بهترین کاندیداهای مرحله اول با حجم فایل قابل تنظیم (128KB تا 5MB).
-  - **امتیازدهی ترکیبی (Score 0–100)** بر اساس پینگ، جیتر، پکت‌لاس، تایید Trace و سرعت دانلود.
-  - پشتیبانی از ورودی‌های `IP:Port`، `CSV` و **گسترش خودکار رنج‌های CIDR** (مثل `/24`).
-- **موتور پشتیبان خودکار Dart:** در صورتی که بدون کامپایل کردن `edgepulse_core.aar` مستقیم `flutter run` بگیرید، اپ بدون خطا اجرا شده و به‌طور خودکار از موتور همزمان `dart:io` استفاده می‌کند.
-- **دیتابیس داخلی به تفکیک ۲۰ کشور + همگام‌سازی آنلاین از گیت‌هاب:** شامل لیست‌های آماده آلمان، هلند، فنلاند، فرانسه، بریتانیا، سوئد، سوئیس، اسپانیا، لهستان، ترکیه، امارات، آمریکا، کانادا، سنگاپور، ژاپن و... به همراه دامین‌های پویا و دکمه دریافت آنلاین جدیدترین لیست‌ها از مخازن عمومی ([NiREvil/vless](https://github.com/NiREvil/vless/blob/main/sub/ProxyIP.md) و [FoolVPN-ID/Nautica](https://github.com/FoolVPN-ID/Nautica/blob/main/proxyList.txt)).
-- **خروجی چندفرمته (Export):** کپی یا اشتراک‌گذاری نتایج سالم در فرمت‌های `TXT (IP:Port)`، `CSV`، `JSON`، فرمت تک‌خطی `BPB Panel` و تولید مستقیم لینک‌های `VLESS`.
-- **نسخه خط فرمان (CLI) برای Termux و دسکتاپ:** قابل اجرا در ترموکس اندروید با `scripts/setup-termux.sh`.
+- **اسکن IPv4 و IPv6:** پارس خودکار `IP:Port`، `[IPv6]:Port`، آدرس خام IPv6 و رنج‌های CIDR نسخه ۴ و ۶ (مثل `2606:4700:1000::/48`).
+- **موتور بومی Go:** استخر همزمان تا ۵۰۰ کارگر، توقف/ادامه لحظه‌ای، تست چندمرحله‌ای TCP برای Min/Avg/Max Ping، جیتر و پکت‌لاس.
+- **بررسی TLS و Trace:** Handshake با SNI/ALPN/نسخه TLS دلخواه و تایید مسیر کلودفلر با `/cdn-cgi/trace` برای استخراج Colo.
+- **تست سرعت دانلود (Speed Test)** روی کاندیداهای برتر و امتیازدهی ترکیبی ۰ تا ۱۰۰.
+- **موتور پشتیبان Dart:** اگر هسته Go کامپایل نشده باشد، اپ بدون خطا با موتور همزمان `dart:io` کار می‌کند.
+- **دیتابیس ۲۰ کشور:** آلمان، هلند، فنلاند، فرانسه، بریتانیا، سوئد، سوئیس، اسپانیا، لهستان، ترکیه، امارات، آمریکا، کانادا، سنگاپور، ژاپن، استرالیا، برزیل، ایرلند، هند و لتونی، همراه با به‌روزرسانی آنلاین لیست‌ها.
+- **خروجی کامل و انعطاف‌پذیر:**
+  - جداکننده **خط جدید** یا **کاما**
+  - **با پورت** (`1.2.3.4:443`) یا **بدون پورت** (`1.2.3.4`)
+  - **هشتگ کشور** برای گروه‌بندی (`#DE`، `#NL`، …)
+  - فیلتر **فقط IPv6**، خروجی `CSV`، `JSON` و لینک‌های `VLESS`
+  - کپی سریع یا اشتراک فایل
+- **طراحی بناو (Bento) مدرن:** کارت‌های گوشه‌گرد، تایپوگرافی درشت و اعداد زنده؛ همراه با **دموی ۱۸ نتیجه‌ای** برای دیدن چیدمان بدون اسکن.
+- **بدون نمایش دامنه‌های پویا:** کاربر فقط آدرس‌های آی‌پی و رنج‌هایی را می‌بیند که اسکن می‌کند.
+- **نسخه خط فرمان** برای Termux و دسکتاپ.
 
-## ساختار پروژه (Architecture)
+---
+
+## ساختار پروژه
 
 ```text
-edgepulse_scanner/
-├── android/                    # لایه بومی اندروید (Kotlin MethodChannel + EventChannel)
-│   ├── app/build.gradle.kts
-│   └── app/src/main/kotlin/com/edgepulse/scanner/MainActivity.kt
-├── go_core/                     # موتور اسکن بومی Go (قابل بیلد با gomobile و CLI)
-│   ├── go.mod
-│   ├── models.go                # مدل‌ها، تنظیمات کامل، پارسر چندفرمته و گسترش CIDR
-│   ├── scanner.go               # موتور همزمان TCP/TLS/Trace/SpeedTest/Scoring
-│   ├── mobile.go                # رابط صادراتی gomobile برای اتصال به اندروید
-│   ├── scanner_test.go          # تست‌های واحد Go
-│   └── cmd/edgepulse-cli/       # نسخه خط فرمان برای Termux و دسکتاپ
-├── lib/                         # اپلیکیشن Flutter/Dart
-│   ├── main.dart                # تم AMOLED تیره و ناوبری ۵ تب (فارسی RTL / انگلیسی)
-│   ├── data/proxy_database.dart # دیتابیس داخلی پروکسی آی‌پی‌ها به تفکیک کشور + ریجن‌های Placement
-│   ├── models/scan_models.dart
-│   ├── services/                # پل Go/Dart، ذخیره تنظیمات، سینک گیت‌هاب، خروجی چندفرمته
+miliscanner/
+├── android/                     # لایه بومی اندروید (Kotlin MethodChannel + EventChannel)
+│   └── app/src/main/
+│       ├── kotlin/com/edgepulse/scanner/MainActivity.kt
+│       └── res/drawable/ic_miliscanner.xml   # لوگوی اپ (M + ذره‌بین)
+├── go_core/                     # موتور اسکن بومی Go
+│   ├── models.go                # مدل‌ها، پارسر IPv4/IPv6 و گسترش CIDR
+│   ├── scanner.go               # TCP/TLS/Trace/SpeedTest/Scoring
+│   ├── mobile.go                # رابط gomobile برای اندروید
+│   ├── scanner_test.go          # تست‌های واحد (شامل IPv6)
+│   └── cmd/edgepulse-cli/       # نسخه خط فرمان
+├── lib/
+│   ├── main.dart                # تم AMOLED و ناوبری ۵ تب (فارسی RTL / انگلیسی)
+│   ├── widgets/mili_logo.dart   # لوگوی برداری M + ذره‌بین
+│   ├── data/proxy_database.dart # دیتابیس کشورها و رنج‌های IPv6
+│   ├── models/scan_models.dart  # مدل‌ها و گزینه‌های خروجی
+│   ├── services/                # پل Go/Dart، ذخیره تنظیمات، سینک، خروجی
 │   ├── state/scanner_controller.dart
 │   └── screens/                 # Dashboard، Countries، Results، Settings، History
-├── scripts/
-│   ├── build_all.sh             # بیلد کامل AAR هسته Go + APK فلاتر
-│   └── setup-termux.sh          # نصب سریع نسخه CLI روی ترموکس
-└── .github/workflows/
-    └── build-android.yml        # بیلد خودکار APK در GitHub Actions
+└── scripts/
+    ├── build_all.sh
+    └── setup-termux.sh
 ```
 
-## راهنمای سریع بیلد APK (Quick Start)
+---
 
-### روش ۱: بیلد خودکار بدون نصب ابزار روی سیستم (GitHub Actions)
-1. این پروژه را در یک مخزن جدید گیت‌هاب آپلود (Push) کنید.
-2. وارد تب **Actions** شوید و ورک‌فلو **Build EdgePulse Android APK (Go + Flutter)** را اجرا کنید.
-3. پس از پایان بیلد، فایل‌های آماده نصب `.apk` (شامل `arm64-v8a`، `armeabi-v7a` و نسخه Universal) را از بخش **Artifacts** دانلود و روی گوشی نصب کنید.
+## دریافت APK
 
-### روش ۴: دانلود مستقیم APK از Releases
-اگر نمی‌خواهید خودتان بیلد بگیرید، به بخش **Releases** همین مخزن بروید و فایل نصب اندروید را دانلود کنید:
+نسخه‌های آماده نصب در بخش **Releases** همین مخزن منتشر می‌شوند:
 
 | فایل | مناسب برای |
 | --- | --- |
-| `EdgePulse-Scanner-1.0.0-arm64-v8a.apk` | اکثر گوشی‌های جدید (۶۴ بیتی) — پیشنهادی |
-| `EdgePulse-Scanner-1.0.0-armeabi-v7a.apk` | گوشی‌های قدیمی‌تر ۳۲ بیتی |
-| `EdgePulse-Scanner-1.0.0-x86_64.apk` | امولاتور و دستگاه‌های x86_64 |
-| `EdgePulse-Scanner-1.0.0-universal.apk` | نسخه Universal (همه معماری‌ها، حجم بیشتر) |
+| `miliscanner-*-arm64-v8a.apk` | اکثر گوشی‌های جدید (۶۴ بیتی) — پیشنهادی |
+| `miliscanner-*-armeabi-v7a.apk` | گوشی‌های قدیمی‌تر ۳۲ بیتی |
+| `miliscanner-*-x86_64.apk` | امولاتور و دستگاه‌های x86_64 |
+| `miliscanner-*-universal.apk` | نسخه Universal (همه معماری‌ها) |
 
-پس از دانلود، نصب از منابع نامشخص (Install unknown apps) را برای مرورگر یا فایل‌منیجر فعال کنید و APK را نصب کنید.
+پس از دانلود، گزینه **Install unknown apps** را برای مرورگر یا فایل‌منیجر فعال و APK را نصب کنید.
 
-### روش ۲: بیلد محلی (Linux / macOS)
+## بیلد
+
 ```bash
+# بیلد کامل AAR هسته Go + APK فلاتر (Linux / macOS)
 chmod +x scripts/build_all.sh
 ./scripts/build_all.sh
 ```
 
-### روش ۳: اجرای موتور Go در ترموکس اندروید (Termux)
+- بیلد خودکار: ورک‌فلو **Build miliscanner Android APK (Go + Flutter)** در تب Actions.
+- اجرای CLI در Termux:
+
 ```bash
 chmod +x scripts/setup-termux.sh
 ./scripts/setup-termux.sh
 edgepulse-cli -in proxies.txt -out best.csv -c 64 -trace -speed
 ```
+
+## پشتیبانی
+
+سوال، پیشنهاد یا گزارش خطا: [@miliconfig](https://t.me/miliconfig)

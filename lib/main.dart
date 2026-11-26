@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'widgets/mili_logo.dart';
 import 'screens/countries_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/history_screen.dart';
@@ -8,17 +9,17 @@ import 'state/scanner_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const EdgePulseApp());
+  runApp(const MiliScannerApp());
 }
 
-class EdgePulseApp extends StatefulWidget {
-  const EdgePulseApp({super.key});
+class MiliScannerApp extends StatefulWidget {
+  const MiliScannerApp({super.key});
 
   @override
-  State<EdgePulseApp> createState() => _EdgePulseAppState();
+  State<MiliScannerApp> createState() => _MiliScannerAppState();
 }
 
-class _EdgePulseAppState extends State<EdgePulseApp> {
+class _MiliScannerAppState extends State<MiliScannerApp> {
   final ScannerController _controller = ScannerController();
   int _tabIndex = 0;
 
@@ -47,7 +48,7 @@ class _EdgePulseAppState extends State<EdgePulseApp> {
         );
 
         return MaterialApp(
-          title: 'EdgePulse Scanner',
+          title: 'miliscanner',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
             useMaterial3: true,
@@ -55,11 +56,23 @@ class _EdgePulseAppState extends State<EdgePulseApp> {
             colorScheme: scheme,
             scaffoldBackgroundColor: const Color(0xFF070A0E),
             cardTheme: CardThemeData(
-              color: const Color(0xFF10161F),
+              color: const Color(0xFF0E141C),
               elevation: 0,
+              margin: const EdgeInsets.only(bottom: 10),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+                borderRadius: BorderRadius.circular(22),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.07)),
+              ),
+            ),
+            snackBarTheme: const SnackBarThemeData(
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Color(0xFF16202B),
+            ),
+            filledButtonTheme: FilledButtonThemeData(
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
             ),
             inputDecorationTheme: InputDecorationTheme(
@@ -79,32 +92,18 @@ class _EdgePulseAppState extends State<EdgePulseApp> {
           },
           home: Scaffold(
             appBar: AppBar(
-              backgroundColor: const Color(0xFF0B0F14),
+              backgroundColor: const Color(0xFF070A0E),
               elevation: 0,
+              titleSpacing: 14,
               title: Row(
                 children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF00E676).withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: const Color(0xFF00E676).withValues(alpha: 0.5),
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.radar_rounded,
-                      color: Color(0xFF00E676),
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
+                  const MiliLogo(size: 34),
+                  const SizedBox(width: 9),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'EdgePulse Scanner',
+                        'miliscanner',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                       ),
                       Text(

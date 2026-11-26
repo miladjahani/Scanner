@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../state/scanner_controller.dart';
+import '../widgets/mili_logo.dart';
 
 class SettingsScreen extends StatefulWidget {
   final ScannerController controller;
@@ -45,6 +47,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _vlessHostCtrl.dispose();
     _vlessPathCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _openSupportChannel() async {
+    await launchUrl(
+      Uri.parse('https://t.me/miliconfig'),
+      mode: LaunchMode.externalApplication,
+    );
   }
 
   @override
@@ -144,6 +153,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: Text(isFa ? 'رد کردن خطای گواهی SSL روی IP خام' : 'Skip SSL Cert Verification'),
                   value: cfg.insecureSkipCert,
                   onChanged: (v) => c.updateConfig(cfg.copyWith(insecureSkipCert: v)),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.lan_rounded, color: Color(0xFFB388FF)),
+                  title: Text(isFa ? 'پشتیبانی خودکار IPv4 و IPv6' : 'Automatic IPv4 & IPv6 support'),
+                  subtitle: Text(
+                    isFa
+                        ? 'آدرس‌های IPv6 و رنج‌های CIDR نسخه ۶ به‌صورت خودکار شناسایی و اسکن می‌شوند.'
+                        : 'IPv6 literals and /48-style IPv6 CIDR blocks are detected and scanned automatically.',
+                    style: const TextStyle(fontSize: 11),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -331,6 +351,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   controller: _vlessPathCtrl,
                   decoration: const InputDecoration(labelText: 'WebSocket Path', isDense: true),
                   onChanged: (v) => c.updateConfig(cfg.copyWith(vlessPath: v.trim())),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        _sectionHeader(isFa ? '۶. پشتیبانی' : '6. Support'),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.telegram_rounded, color: Color(0xFF29B6F6)),
+            title: const Text('@miliconfig'),
+            subtitle: Text(
+              isFa ? 'کانال پشتیبانی و اطلاع‌رسانی miliscanner' : 'miliscanner support & updates channel',
+              style: const TextStyle(fontSize: 11),
+            ),
+            trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+            onTap: _openSupportChannel,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                const MiliLogo(size: 48),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'miliscanner',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        isFa
+                            ? 'نسخه ۱.۰.۱ • کانال پشتیبانی: @miliconfig'
+                            : 'v1.0.1 • support channel: @miliconfig',
+                        style: const TextStyle(fontSize: 11, color: Colors.white60),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
