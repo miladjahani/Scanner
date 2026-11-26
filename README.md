@@ -28,6 +28,9 @@
 
 ```text
 edgepulse_scanner/
+├── android/                    # لایه بومی اندروید (Kotlin MethodChannel + EventChannel)
+│   ├── app/build.gradle.kts
+│   └── app/src/main/kotlin/com/edgepulse/scanner/MainActivity.kt
 ├── go_core/                     # موتور اسکن بومی Go (قابل بیلد با gomobile و CLI)
 │   ├── go.mod
 │   ├── models.go                # مدل‌ها، تنظیمات کامل، پارسر چندفرمته و گسترش CIDR
@@ -35,8 +38,6 @@ edgepulse_scanner/
 │   ├── mobile.go                # رابط صادراتی gomobile برای اتصال به اندروید
 │   ├── scanner_test.go          # تست‌های واحد Go
 │   └── cmd/edgepulse-cli/       # نسخه خط فرمان برای Termux و دسکتاپ
-├── android/                     # لایه بومی اندروید (Kotlin MethodChannel + EventChannel)
-│   └── app/src/main/kotlin/com/edgepulse/scanner/MainActivity.kt
 ├── lib/                         # اپلیکیشن Flutter/Dart
 │   ├── main.dart                # تم AMOLED تیره و ناوبری ۵ تب (فارسی RTL / انگلیسی)
 │   ├── data/proxy_database.dart # دیتابیس داخلی پروکسی آی‌پی‌ها به تفکیک کشور + ریجن‌های Placement
@@ -57,6 +58,17 @@ edgepulse_scanner/
 1. این پروژه را در یک مخزن جدید گیت‌هاب آپلود (Push) کنید.
 2. وارد تب **Actions** شوید و ورک‌فلو **Build EdgePulse Android APK (Go + Flutter)** را اجرا کنید.
 3. پس از پایان بیلد، فایل‌های آماده نصب `.apk` (شامل `arm64-v8a`، `armeabi-v7a` و نسخه Universal) را از بخش **Artifacts** دانلود و روی گوشی نصب کنید.
+
+### روش ۴: دانلود مستقیم APK از Releases
+اگر نمی‌خواهید خودتان بیلد بگیرید، به بخش **Releases** همین مخزن بروید و فایل نصب اندروید را دانلود کنید:
+
+| فایل | مناسب برای |
+| --- | --- |
+| `app-arm64-v8a-release.apk` | اکثر گوشی‌های جدید (۶۴ بیتی) — پیشنهادی |
+| `app-armeabi-v7a-release.apk` | گوشی‌های قدیمی‌تر ۳۲ بیتی |
+| `app-release.apk` | نسخه Universal (همه معماری‌ها، حجم بیشتر) |
+
+پس از دانلود، نصب از منابع نامشخص (Install unknown apps) را برای مرورگر یا فایل‌منیجر فعال کنید و APK را نصب کنید.
 
 ### روش ۲: بیلد محلی (Linux / macOS)
 ```bash
