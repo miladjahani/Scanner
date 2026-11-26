@@ -3,7 +3,6 @@ package edgepulse
 import (
 	"bufio"
 	"encoding/binary"
-	"fmt"
 	"net"
 	"strconv"
 	"strings"
