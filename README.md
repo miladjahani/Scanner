@@ -1,3 +1,10 @@
+<p align="center">
+  <a href="https://github.com/miladjahani/Scanner/stargazers"><img src="https://img.shields.io/badge/%E2%98%85_STAR-84cc16?style=for-the-badge&labelColor=0b140b&logo=github&logoColor=white" alt="Star this repository" /></a>
+  <a href="https://github.com/miladjahani/Scanner/fork"><img src="https://img.shields.io/badge/FORK-84cc16?style=for-the-badge&labelColor=0b140b&logo=github&logoColor=white" alt="Fork" /></a>
+  <a href="https://github.com/miladjahani/Scanner/issues"><img src="https://img.shields.io/badge/ISSUES-84cc16?style=for-the-badge&labelColor=0b140b" alt="Issues" /></a>
+  <a href="https://github.com/miladjahani/Scanner/releases"><img src="https://img.shields.io/badge/RELEASES-84cc16?style=for-the-badge&labelColor=0b140b&logo=rocket&logoColor=white" alt="Releases" /></a>
+</p>
+
 # miliscanner — اسکنر پروکسی آی‌پی کلودفلر (Go + Flutter)
 
 ![Platform](https://img.shields.io/badge/Platform-Android%20(API%2024%2B)-00E676?style=flat-square)
